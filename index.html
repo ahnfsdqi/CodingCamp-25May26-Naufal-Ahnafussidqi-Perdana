@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="FinanceFlow — Neo-Brutalist personal finance tracker." />
+  <title>FinanceFlow — Personal Finance Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true">📊</span>
+        <h1 class="brand-name">FinanceFlow</h1>
+      </div>
+      <button class="btn btn-icon" id="themeToggleBtn" aria-label="Toggle dark/light mode">
+        <span id="themeIcon">🌙</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section class="summary-grid" aria-label="Financial Summary">
+      <article class="card card--balance" id="balanceCard">
+        <p class="card-label">Total Balance</p>
+        <h2 class="card-value font-mono" id="totalBalance">Rp 0</h2>
+        <span class="card-badge" id="balanceBadge">Neutral</span>
+      </article>
+      <article class="card card--income">
+        <p class="card-label">Total Income</p>
+        <h2 class="card-value card-value--income font-mono" id="totalIncome">Rp 0</h2>
+      </article>
+      <article class="card card--expense">
+        <p class="card-label">Total Expenses</p>
+        <h2 class="card-value card-value--expense font-mono" id="totalExpense">Rp 0</h2>
+      </article>
+      <article class="card card--budget" id="budgetCard">
+        <p class="card-label">Monthly Budget</p>
+        <h2 class="card-value font-mono" id="budgetDisplay">Not Set</h2>
+        <div class="budget-bar-wrap" id="budgetBarWrap">
+          <div class="budget-bar-track">
+            <div class="budget-bar-fill" id="budgetBarFill"></div>
+          </div>
+          <span class="budget-bar-pct font-mono" id="budgetBarPct">0%</span>
+        </div>
+      </article>
+    </section>
+
+    <div class="budget-alert" id="budgetAlert" role="alert" aria-live="polite" hidden>
+      <span>⚠️</span>
+      <span id="budgetAlertMsg">Budget limit exceeded!</span>
+      <button class="budget-alert-close" id="budgetAlertClose" aria-label="Dismiss">✕</button>
+    </div>
+
+    <div class="content-grid">
+      <aside class="left-panel">
+        <section class="panel" aria-labelledby="formTitle">
+          <h2 class="panel-title" id="formTitle">Add Transaction</h2>
+          <form id="transactionForm" novalidate autocomplete="off">
+            <div class="form-group">
+              <label class="form-label" for="txDescription">Description</label>
+              <input class="form-input" type="text" id="txDescription" placeholder="e.g. Salary, Groceries…" maxlength="80" />
+              <span class="form-error" id="errDescription" role="alert"></span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="txAmount">Amount (Rp)</label>
+              <input class="form-input font-mono" type="number" id="txAmount" placeholder="0" min="1" step="any" />
+              <span class="form-error" id="errAmount" role="alert"></span>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="txType">Type</label>
+                <select class="form-input form-select" id="txType">
+                  <option value="income">💰 Income</option>
+                  <option value="expense" selected>💸 Expense</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="txCategory">Category</label>
+                <select class="form-input form-select" id="txCategory">
+                  <optgroup label="── Income ──">
+                    <option value="Salary">Salary</option>
+                    <option value="Freelance">Freelance</option>
+                    <option value="Investment">Investment</option>
+                    <option value="Gift">Gift</option>
+                    <option value="Other Income">Other Income</option>
+                  </optgroup>
+                  <optgroup label="── Expense ──">
+                    <option value="Food &amp; Drink">Food &amp; Drink</option>
+                    <option value="Transport">Transport</option>
+                    <option value="Shopping">Shopping</option>
+                    <option value="Housing">Housing</option>
+                    <option value="Health">Health</option>
+                    <option value="Education">Education</option>
+                    <option value="Entertainment">Entertainment</option>
+                    <option value="Utilities">Utilities</option>
+                    <option value="Other Expense">Other Expense</option>
+                  </optgroup>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="txDate">Date</label>
+              <input class="form-input font-mono" type="date" id="txDate" />
+              <span class="form-error" id="errDate" role="alert"></span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="txNote">Note <span class="form-optional">(optional)</span></label>
+              <input class="form-input" type="text" id="txNote" placeholder="Additional notes…" maxlength="120" />
+            </div>
+            <button class="btn btn-primary btn-full" type="submit" id="addTxBtn">+ Add Transaction</button>
+          </form>
+        </section>
+
+        <section class="panel" aria-labelledby="budgetTitle">
+          <h2 class="panel-title" id="budgetTitle">Budget Cap</h2>
+          <div class="budget-form">
+            <input class="form-input font-mono" type="number" id="budgetInput" placeholder="Monthly limit (Rp)" min="1" step="any" />
+            <button class="btn btn-secondary" id="setBudgetBtn">Set</button>
+            <button class="btn btn-ghost" id="clearBudgetBtn" title="Clear budget">✕</button>
+          </div>
+          <span class="form-error" id="errBudget" role="alert"></span>
+        </section>
+
+        <section class="panel" aria-labelledby="chartTitle">
+          <h2 class="panel-title" id="chartTitle">Spending Breakdown</h2>
+          <div class="chart-wrap">
+            <canvas id="spendingChart" aria-label="Pie chart of spending by category" role="img"></canvas>
+            <p class="chart-empty" id="chartEmpty">No expense data yet.</p>
+          </div>
+        </section>
+      </aside>
+
+      <section class="right-panel" aria-labelledby="historyTitle">
+        <div class="history-header">
+          <h2 class="panel-title" id="historyTitle">Transaction History</h2>
+          <button class="btn btn-danger btn-sm" id="clearAllBtn">Clear All</button>
+        </div>
+
+        <div class="filter-bar">
+          <select class="form-input form-select filter-select" id="filterCategory" aria-label="Filter by category">
+            <option value="all">All Categories</option>
+            <option value="Salary">Salary</option>
+            <option value="Freelance">Freelance</option>
+            <option value="Investment">Investment</option>
+            <option value="Gift">Gift</option>
+            <option value="Other Income">Other Income</option>
+            <option value="Food &amp; Drink">Food &amp; Drink</option>
+            <option value="Transport">Transport</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Housing">Housing</option>
+            <option value="Health">Health</option>
+            <option value="Education">Education</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Utilities">Utilities</option>
+            <option value="Other Expense">Other Expense</option>
+          </select>
+          <select class="form-input form-select filter-select" id="filterType" aria-label="Filter by type">
+            <option value="all">All Types</option>
+            <option value="income">Income Only</option>
+            <option value="expense">Expense Only</option>
+          </select>
+          <select class="form-input form-select filter-select" id="sortOrder" aria-label="Sort transactions">
+            <option value="date-desc">Date: Newest</option>
+            <option value="date-asc">Date: Oldest</option>
+            <option value="amount-desc">Amount: High→Low</option>
+            <option value="amount-asc">Amount: Low→High</option>
+          </select>
+          <input class="form-input filter-search" type="search" id="searchInput" placeholder="🔍 Search…" aria-label="Search transactions" />
+        </div>
+
+        <div class="history-list-wrap">
+          <ul class="history-list" id="historyList" aria-label="Transaction list" aria-live="polite"></ul>
+          <div class="history-empty" id="historyEmpty" hidden>
+            <span class="history-empty-icon">📭</span>
+            <p>No transactions found.</p>
+          </div>
+        </div>
+        <div class="pagination" id="pagination" aria-label="Pagination"></div>
+      </section>
+    </div>
+  </main>
+
+  <div class="modal-overlay" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" hidden>
+    <div class="modal">
+      <h3 class="modal-title" id="modalTitle">Confirm Delete</h3>
+      <p class="modal-body" id="modalBody">Are you sure? This cannot be undone.</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="modalCancelBtn">Cancel</button>
+        <button class="btn btn-danger" id="modalConfirmBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer" aria-live="assertive" aria-atomic="true"></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
